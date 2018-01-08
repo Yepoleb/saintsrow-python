@@ -97,7 +97,7 @@ class MaterialMap(VBase):
         self.num_materials = stream.read_uint32()
         stream.skip(4)
 
-fstream = open("joshbirk_body_high.matlib_pc", "rb")
+fstream = open("examples/joshbirk_body_high.matlib_pc", "rb")
 binstream = MatlibIO(fstream)
 mlib = Matlib(binstream)
 print(repr(mlib))
