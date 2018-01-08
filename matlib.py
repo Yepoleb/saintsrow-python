@@ -94,7 +94,7 @@ class MaterialTexture(VBase):
 class MaterialMap(VBase):
     def read(self, stream):        
         self.materials_p = stream.read_ptr()
-        self.type = stream.read_uint32()
+        self.num_materials = stream.read_uint32()
         stream.skip(4)
 
 fstream = open("joshbirk_body_high.matlib_pc", "rb")
