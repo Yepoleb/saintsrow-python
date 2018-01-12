@@ -70,7 +70,7 @@ class BinIO(object):
         return self.unpack_one("d")
 
     def read_bool(self):
-        return (self.unpack("?"))
+        return self.unpack_one("?")
     
     def read_char(self):
         return self.unpack_one("c")

@@ -1,23 +1,6 @@
-import io
 from binio import BinIO
+from common import VBase, VFile, VBinIO
 
-
-class MatlibIO(BinIO):
-    def read_ptr(self):
-        ptr_val = self.read_uint32()
-        self.skip(4)
-        return ptr_val
-
-class VBase:
-    def __init__(self, stream=None):
-        if stream is not None:
-            self.read(stream)
-    
-    def read(self, stream):
-        raise NotImplementedError()
-    
-    def __repr__(self):
-        return repr(self.__dict__)
 
 class Matlib(VBase):
     def read(self, stream):
@@ -47,23 +30,12 @@ class Matlib(VBase):
             for tex in mat.textures:
                 stream.seek(matlib_base_pos + self.texture_names_p + tex.texture_handle)
                 tex.name = stream.read_cstring()
-        
-
-class VFile(VBase):
-    def read(self, stream):
-        self.signature = stream.read_uint16()
-        self.version = stream.read_uint16()
-        self.reference_data_size = stream.read_uint32()
-        self.reference_data_start = stream.read_uint32()
-        self.reference_count = stream.read_uint32()
-        self.initialized = stream.read_uint8()
-        stream.skip(15)
-        self.references = [stream.read_cstring() for i in range(self.reference_count)]
-        stream.align(16)
 
 class Material(VBase):
     def read(self, stream):        
-        self.size = stream.read_uint64()
+        mat_start = stream.tell()
+        self.size = stream.read_uint32()
+        stream.skip(4)
         self.shader_handle = stream.read_uint32()
         self.name_checksum = stream.read_uint32()
         self.mat_flags = stream.read_uint32()
@@ -82,6 +54,7 @@ class Material(VBase):
         self.constant_block = []
         for i in range(self.num_constants):
             self.constant_block.append([stream.read_float() for j in range(4)])
+        stream.seek(mat_start + self.size)
 
 class MaterialTexture(VBase):
     def read(self, stream):        
@@ -97,7 +70,8 @@ class MaterialMap(VBase):
         self.num_materials = stream.read_uint32()
         stream.skip(4)
 
-fstream = open("examples/joshbirk_body_high.matlib_pc", "rb")
-binstream = MatlibIO(fstream)
-mlib = Matlib(binstream)
-print(repr(mlib))
+if __name__ == "__main__":
+    fstream = open("examples/SMG_Pistol_A_high.matlib_pc", "rb")
+    binstream = VBinIO(fstream)
+    mlib = Matlib(binstream)
+    print(repr(mlib))
