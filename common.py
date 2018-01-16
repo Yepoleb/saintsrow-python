@@ -5,10 +5,10 @@ class VBase:
     def __init__(self, stream=None):
         if stream is not None:
             self.read(stream)
-    
+
     def read(self, stream):
         raise NotImplementedError()
-    
+
     def __repr__(self):
         return repr(self.__dict__)
 
@@ -29,3 +29,19 @@ class VBinIO(BinIO):
         ptr_val = self.read_uint32()
         self.skip(4)
         return ptr_val
+
+    def read_vec3(self):
+        return self.unpack("3f")
+
+    def read_vec4(self):
+        return self.unpack("4f")
+
+    def read_comp_vec4(self):
+        values = self.unpack("4B")
+        return tuple((x - 127) / 128.0 for x in values)
+
+    def read_ucvec_4(self):
+        return self.unpack("4B")
+
+    def read_scvec_4(self):
+        return self.unpack("4b")
