@@ -2,9 +2,9 @@ from binio import BinIO
 
 
 class VBase:
-    def __init__(self, stream=None):
+    def __init__(self, stream=None, *args, **kwargs):
         if stream is not None:
-            self.read(stream)
+            self.read(stream, *args, **kwargs)
 
     def read(self, stream):
         raise NotImplementedError()

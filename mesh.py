@@ -48,13 +48,17 @@ class StaticMesh(VBase):
         texture_name_data = stream.read(self.texture_name_size)
 
         stream.align(16)
-        self.navpoints = [StaticMeshNavpoint(stream) for i in range(self.num_navpoints)]
+        self.navpoints = [
+            StaticMeshNavpoint(stream) for i in range(self.num_navpoints)]
         stream.align(16)
-        self.cspheres = [CMeshSphere(stream) for i in range(self.num_cspheres)]
+        self.cspheres = [
+            CMeshSphere(stream) for i in range(self.num_cspheres)]
         stream.align(16)
-        self.ccylinders = [CMeshCylinder(stream) for i in range(self.num_ccylinders)]
+        self.ccylinders = [
+            CMeshCylinder(stream) for i in range(self.num_ccylinders)]
         stream.align(16)
-        self.rig_bones = [stream.read_uint32() for i in range(self.num_rig_bones)]
+        self.rig_bones = [
+            stream.read_uint32() for i in range(self.num_rig_bones)]
 
         stream.align(8)
         mesh_start = stream.tell()
@@ -67,17 +71,25 @@ class StaticMesh(VBase):
         stream.seek(mesh_start + self.mesh_cpu_data_size)
 
         stream.align(8)
-        self.material_maps_p = [stream.read_ptr() for i in range(self.num_material_maps)]
-        self.material_map_name_crcs = [stream.read_uint32() for i in range(self.num_material_maps)]
-        self.materials_p = [stream.read_ptr() for i in range(self.num_materials)]
+        self.material_maps_p = [
+            stream.read_ptr() for i in range(self.num_material_maps)]
+        self.material_map_name_crcs = [
+            stream.read_uint32() for i in range(self.num_material_maps)]
+        self.materials_p = [
+            stream.read_ptr() for i in range(self.num_materials)]
         stream.align(16)
-        self.materials = [Material(stream) for i in range(self.num_materials)]
+        self.materials = [
+            Material(stream) for i in range(self.num_materials)]
         stream.align(16)
-        self.material_maps = [MaterialMap(stream) for i in range(self.num_material_maps)]
-        self.submesh_vids = [stream.read_uint32() for i in range(self.num_submesh_vids)]
+        self.material_maps = [
+            MaterialMap(stream) for i in range(self.num_material_maps)]
+        self.submesh_vids = [
+            stream.read_uint32() for i in range(self.num_submesh_vids)]
         stream.align(8)
-        self.submesh_lod_info = [stream.read_int16() for i in
-            range(self.num_logical_submeshes * self.num_lods_per_submesh)]
+        self.submesh_lod_info = [
+            stream.read_int16()
+            for i in range(
+                self.num_logical_submeshes * self.num_lods_per_submesh)]
 
         for mat in self.materials:
             for tex in mat.textures:
@@ -87,16 +99,19 @@ class StaticMesh(VBase):
         self.gpu_crc = stream.read_uint32()
         stream.seek(16)
         if self.mesh.index_buffer.index_size == 2:
-            self.mesh.index_buffer.indices = [stream.read_uint16() for i in range(
-                self.mesh.index_buffer.num_indices)]
+            self.mesh.index_buffer.indices = [
+                stream.read_uint16()
+                for i in range(self.mesh.index_buffer.num_indices)]
         else:
-            self.mesh.index_buffer.indices = [stream.read_uint32() for i in range(
-                self.mesh.index_buffer.num_indices)]
+            self.mesh.index_buffer.indices = [
+                stream.read_uint32()
+                for i in range(self.mesh.index_buffer.num_indices)]
         stream.align(16)
         for vertex_buf in self.mesh.vertex_buffers:
-            vertex_buf.verts = [Vertex(stream) for i in range(vertex_buf.num_verts)]
+            vertex_buf.verts = [
+                Vertex(stream, vertex_buf.vertex_format)
+                for i in range(vertex_buf.num_verts)]
         self.gpu_crc2 = stream.read_uint32()
-
 
 class StaticMeshNavpoint(VBase):
     def read(self, stream):
@@ -121,6 +136,7 @@ class CMeshCylinder(VBase):
         self.radius = stream.read_float()
         self.height = stream.read_float()
 
+
 class RlMesh(VBase):
     def read(self, stream):
         mesh_start = stream.tell() - 16
@@ -136,28 +152,28 @@ class RlMesh(VBase):
         self.position_offset = stream.read_vec3()
 
         stream.seek(mesh_start + self.vertex_buffers_p)
-        self.vertex_buffers = [VertexBuffer(stream) for i in range(self.num_vertex_buffers)]
-        self.bone_map.mapped_bone_list = [stream.read_uint8() for i in range(self.bone_map.num_mapped_bones)]
-        self.bone_map.bone_groups = [BoneGroup(stream) for i in range(self.bone_map.num_bone_groups)]
+        self.vertex_buffers = [
+            VertexBuffer(stream)
+            for i in range(self.num_vertex_buffers)]
+        self.bone_map.mapped_bone_list = [
+            stream.read_uint8()
+            for i in range(self.bone_map.num_mapped_bones)]
+        self.bone_map.bone_groups = [
+            BoneGroup(stream)
+            for i in range(self.bone_map.num_bone_groups)]
         stream.seek(mesh_start + self.sub_meshes_p)
-        self.sub_meshes = [SubmeshData(stream) for i in range(self.num_sub_meshes)]
+        self.sub_meshes = [
+            Submesh(stream)
+            for i in range(self.num_sub_meshes)]
         for sub_mesh in self.sub_meshes:
-            sub_mesh.render_blocks = [RenderBlock(stream) for i in range(sub_mesh.num_render_blocks)]
+            sub_mesh.render_blocks = [
+                RenderBlock(stream)
+                for i in range(sub_mesh.num_render_blocks)]
         for sub_mesh in self.sub_meshes:
             sub_mesh.render_block_bone_groups_p = [
-                stream.read_ptr() for i in range(sub_mesh.num_render_blocks)]
+                stream.read_ptr()
+                for i in range(sub_mesh.num_render_blocks)]
         self.crc = stream.read_uint32()
-
-
-class IndexBuffer(VBase):
-    def read(self, stream):
-        self.num_indices = stream.read_uint32()
-        stream.skip(4)
-        self.indices_p = stream.read_ptr()
-        self.index_size = stream.read_uint8()
-        self.prim_type = stream.read_uint8()
-        self.num_blocks = stream.read_uint16()
-        stream.skip(4)
 
 class BoneGroup(VBase):
     def read(self, stream):
@@ -173,17 +189,7 @@ class BoneMap(VBase):
         stream.skip(6)
         self.bone_group_list_p = stream.read_ptr()
 
-class VertexBuffer(VBase):
-    def read(self, stream):
-        self.num_verts = stream.read_int32()
-        self.vert_stride_0 = stream.read_uint8()
-        self.vertex_format = stream.read_uint8()
-        self.num_uv_channels = stream.read_uint8()
-        self.vert_stride_1 = stream.read_uint8()
-        self.render_data_p = stream.read_ptr()
-        self.verts_p = stream.read_ptr()
-
-class SubmeshData(VBase):
+class Submesh(VBase):
     def read(self, stream):
         self.num_render_blocks = stream.read_int32()
         self.bmin = stream.read_vec3()
@@ -201,15 +207,37 @@ class RenderBlock(VBase):
         self.minimum_index = stream.read_uint32()
         self.maximum_index = stream.read_uint32()
 
-class Vertex(VBase):
+class IndexBuffer(VBase):
     def read(self, stream):
+        self.num_indices = stream.read_uint32()
+        stream.skip(4)
+        self.indices_p = stream.read_ptr()
+        self.index_size = stream.read_uint8()
+        self.prim_type = stream.read_uint8()
+        self.num_blocks = stream.read_uint16()
+        stream.skip(4)
+
+class VertexBuffer(VBase):
+    def read(self, stream):
+        self.num_verts = stream.read_int32()
+        self.vert_stride_0 = stream.read_uint8()
+        self.vertex_format = stream.read_uint8()
+        self.num_uv_channels = stream.read_uint8()
+        self.vert_stride_1 = stream.read_uint8()
+        self.render_data_p = stream.read_ptr()
+        self.verts_p = stream.read_ptr()
+
+class Vertex(VBase):
+    def read(self, stream, vertex_format):
         self.pos = stream.read_vec3()
         self.normal = stream.read_comp_vec4()
-        self.tangent = stream.read_comp_vec4()
+        if vertex_format == 3:
+            self.tangent = stream.read_comp_vec4()
         self.blendweights = stream.read_ucvec_4()
         self.blendindices = stream.read_scvec_4()
         self.u = stream.read_uint16() / 1023.0
         self.v = stream.read_uint16() / 1023.0
+
 
 
 if __name__ == "__main__":
